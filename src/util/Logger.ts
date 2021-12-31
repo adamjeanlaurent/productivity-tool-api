@@ -1,3 +1,5 @@
+import chalk, { Chalk } from 'chalk';
+
 import { httpLogsFilename, internalLogsFilename } from "./constants";
 import FileSystem from "./FileSystem";
 import Time from "./Time";
@@ -8,21 +10,21 @@ export enum LogType {
 }
 
 export class Logger {
-    private static shouldLogToFile: boolean = (true || process.env.DEV_ENV == 'production');
+    private static shouldLogToFile: boolean = (process.env.DEV_ENV == 'production');
 
     static warning(log: string, logType: LogType): void {
-        this.logInternal(log, logType, 'Warning');
+        this.logInternal(log, logType, 'Warning', chalk.yellow);
     }
 
     static error(log: string, logType: LogType): void {
-        this.logInternal(log, logType, 'Error');
+        this.logInternal(log, logType, 'Error', chalk.red);
     }
 
     static checkpoint(log: string, logType: LogType): void {
-        this.logInternal(log, logType, 'Checkpoint');
+        this.logInternal(log, logType, 'Checkpoint', chalk.green);
     }
 
-    private static logInternal(log: string, logType: LogType, logPrefix: string): void {
+    private static logInternal(log: string, logType: LogType, logPrefix: string, color: Chalk): void {
         // parse full log
         const fullLog: string = `${Time.getTimeStamp(new Date())} ${logPrefix}: ${log}`;
 
@@ -33,19 +35,19 @@ export class Logger {
                 case LogType.Http:
                     filename = httpLogsFilename;
                         break;
-                    case LogType.Internal:
-                        filename = internalLogsFilename;
-                        break;
-                    default:
-                        filename = internalLogsFilename;
-                        break;
+                case LogType.Internal:
+                    filename = internalLogsFilename;
+                    break;
+                default:
+                    filename = internalLogsFilename;
+                    break;
             }
             this.logToFile(filename, fullLog);
         }
 
         // if not in production we should log to the console
         else {
-            console.log(fullLog);
+            console.log(color(fullLog));
         }
     }
 

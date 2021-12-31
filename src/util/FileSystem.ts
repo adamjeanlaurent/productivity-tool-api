@@ -11,8 +11,9 @@ export default class FileSystem {
     static createDirectory(filepath: string): void {
         if(!this.exists(filepath))
             fsSync.mkdir(
-                filepath, 
-                (err: NodeJS.ErrnoException | null, path?: string | undefined) => {} // :/ had to add this callback for sync method
+                filepath,
+                // :/ had to add this callback for sync method, didn't feel like making this async so enjoy :O
+                (err: NodeJS.ErrnoException | null, path?: string | undefined) => {}
             );
     }
 
