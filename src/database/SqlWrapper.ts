@@ -26,7 +26,7 @@ class SqlWrapper {
         return this.connection !== null;
     }
 
-    runQuery = async <TableType extends RowDataPacket>(query: string, params: QueryParams): Promise<TableType[]> => {
+    runQuery = async <TableType extends RowDataPacket>(query: string, params: QueryParams = []): Promise<TableType[]> => {
         try {
             const [rows]: [ TableType[], FieldPacket[] ] = await this.connection!.execute<TableType[]>(query, params);
             return rows;
