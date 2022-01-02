@@ -38,6 +38,12 @@ const createLogDirectory = (): void => {
     FileSystem.createDirectory(logDirectoryPath);
     FileSystem.createFile(path.join(logDirectoryPath, httpLogsFilename));
     FileSystem.createFile(path.join(logDirectoryPath, internalLogsFilename));
+
+    // add request body logging
+    app.use((req, res, next) => {
+        Logger.checkpoint(JSON.stringify(req.body), LogType.Http);
+        next();
+    });
 }
 
 const connectToDb = (): void => {
