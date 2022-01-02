@@ -3,6 +3,7 @@ import chalk, { Chalk } from 'chalk';
 import { httpLogsFilename, internalLogsFilename } from "./constants";
 import FileSystem from "./FileSystem";
 import Time from "./Time";
+import config from '../Config';
 
 export enum LogType {
     Internal, // for logging internal work the service is doing
@@ -10,7 +11,7 @@ export enum LogType {
 }
 
 export class Logger {
-    private static shouldLogToFile: boolean = (process.env.DEV_ENV == 'production');
+    private static shouldLogToFile: boolean = config.IN_PROD;
 
     static warning(log: string, logType: LogType): void {
         this.logInternal(log, logType, 'Warning', chalk.yellow);
