@@ -1,4 +1,4 @@
-import express, { Router } from 'express';
+import { Router } from 'express';
 
 import { Nullable, HttpResponse, QueryParams } from '../util/types';
 import { ToDoListRowSchema } from '../database/SqlTableTypes';
@@ -7,7 +7,7 @@ import db from '../database/SqlWrapper';
 import { HttpStatusCode } from '../util/constants';
 import { sendErrorResponse } from './routingHelpers';
 
-const router = express.Router();
+const router = Router();
 
 router.post('write/toDoItems', async (req, res) => {
     const { toDoList }: { toDoList: Nullable<string[]> } = req.body;
@@ -52,6 +52,24 @@ router.get('read/toDoItems', async (req, res) => {
     return res.send(response);
 });
 
+router.get('read/toDoItemsByDate', async (req, res) => {
+    let response: HttpResponse = { errors: [] };
+
+    const { date }: { date: string } = req.body;
+
+    if(!date) {
+        sendErrorResponse('passed an empty date', res, response);
+        return res.send(response);
+    }
+
+    const toDoItems: ToDoListRowSchema[] = await getToDoItemsByDate(date);
+
+    response.results = toDoItems;
+
+    res.status(HttpStatusCode.OK);
+    return res.send(response);
+});
+
 router.get('read/completedToDoItems', async (req, res) => {
     let response: HttpResponse = { errors: [] };
 
@@ -62,6 +80,11 @@ router.get('read/completedToDoItems', async (req, res) => {
     res.status(HttpStatusCode.OK);
     return res.send(response);
 });
+
+const getToDoItemsByDate = async (date: string): Promise<ToDoListRowSchema[]> => {
+    const query = `SELECT * FROM ToDoItem WHERE date = '?'`;
+    return db.runQuery<ToDoListRowSchema>(query, [date]);
+}
 
 const getCompletdToDoItems = async (): Promise<ToDoListRowSchema[]> => {
     const query = 'SELECT * FROM completedToDoItems';
@@ -79,6 +102,9 @@ const saveCompletedToDoItem = async (toDoItem: string): Promise<void> => {
 }
 
 const saveToDoItems = async (toDoList: string[]): Promise<void> => {
+    // delete old to do items
+    await db.runQuery('DELETE * FROM ToDoItems');
+
     let query: string = 'INSERT INTO ToDoItems (toDoItem) VALUES ';
     let params: QueryParams = [];
 
@@ -90,3 +116,5 @@ const saveToDoItems = async (toDoList: string[]): Promise<void> => {
 
     await db.runQuery(query, params);
 }
+
+export default router;

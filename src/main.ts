@@ -10,6 +10,10 @@ import FileSystem from './util/FileSystem';
 import { httpLogsFilename, internalLogsFilename, logDirectoryPath } from './util/constants';
 import config from './Config';
 
+// routes
+import toDoRoute from './routes/toDoRoutes';
+import timerRoute from './routes/toDoRoutes';
+ 
 import db from './database/SqlWrapper';
 
 const app: Express = express();
@@ -17,7 +21,8 @@ const app: Express = express();
 var httpLogsAccessStream = fsSync.createWriteStream(path.join(logDirectoryPath, httpLogsFilename), { flags: 'a' });
 
 const attachRoutes = (): void => {
-   
+   app.use('/toDoList', toDoRoute);
+   app.use('/timer', timerRoute);
 }
 
 const attachMiddleware = (): void => {
@@ -46,24 +51,22 @@ const createLogDirectory = (): void => {
     });
 }
 
-const connectToDb = (): void => {
-   db.connect();
-   if(!db.isConnected())
-   {
-       Logger.error('db failed to connect', LogType.Internal);
-       throw new Error('db failed to connect');
-   }
-}
-
-const startServer = (): void => {
+const startServer = async (): Promise<void> => {
     createLogDirectory();
 
     Logger.checkpoint('doing initital server setup...', LogType.Internal);
 
-    connectToDb();
+    db.connect();
+
+    const isDatabaseConnected: boolean = await db.isConnected();
+    
+    if(!isDatabaseConnected) {
+        Logger.error('db failed to connect', LogType.Internal);
+        return;
+    }
+
     attachRoutes();
     attachMiddleware();
-
 
     app.listen(config.SERVER_PORT || 3000, () => {
         Logger.checkpoint(`server listening on port ${3000}`, LogType.Internal);

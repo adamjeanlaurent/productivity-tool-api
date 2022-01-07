@@ -9,6 +9,10 @@ class SqlWrapper {
 
     connect = (): void => {
         try {
+            if(!config.DB_HOST || !config.DB_USER || !config.DB_PASS || !config.DB_DATABASE) {
+                throw new Error('missing database credentials');
+            }
+
             this.connection = mysql.createPool({
                 host: config.DB_HOST,
                 user: config.DB_USER,
@@ -19,11 +23,21 @@ class SqlWrapper {
 
         catch(error: any) {
             Logger.error(error.message, LogType.Internal);
+            this.connection = null;
         }
     }
 
-    isConnected = (): boolean => { 
-        return this.connection !== null;
+    // https://github.com/mysqljs/mysql/issues/708
+    isConnected = async (): Promise<boolean> => {
+        try {
+            await this.connection!.getConnection();
+            return true;
+        }
+        
+        catch {
+            return false;
+        }
+       
     }
 
     runQuery = async <TableType extends RowDataPacket>(query: string, params: QueryParams = []): Promise<TableType[]> => {
