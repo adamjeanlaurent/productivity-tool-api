@@ -36,12 +36,28 @@ class SqlWrapper {
         
         catch {
             return false;
+        }  
+    }
+
+    checkConnectionAndTryToReConnectIfDisconnected = async (): Promise<boolean> => {
+        let isConnectionLive: boolean = await this.isConnected();
+
+        if(!isConnectionLive) {
+            this.connect();
+            isConnectionLive = await this.isConnected();
         }
-       
+
+        return isConnectionLive;
     }
 
     runQuery = async <TableType extends RowDataPacket>(query: string, params: QueryParams = []): Promise<TableType[]> => {
         try {
+            const isConnectionLive: boolean = await this.checkConnectionAndTryToReConnectIfDisconnected();
+
+            if(!isConnectionLive) {
+                throw new Error('not connected to db');
+            }
+
             const [rows]: [ TableType[], FieldPacket[] ] = await this.connection!.execute<TableType[]>(query, params);
             return rows;
         }

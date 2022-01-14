@@ -18,7 +18,7 @@ import db from './database/SqlWrapper';
 
 const app: Express = express();
 
-var httpLogsAccessStream = fsSync.createWriteStream(path.join(logDirectoryPath, httpLogsFilename), { flags: 'a' });
+const httpLogsAccessStream = fsSync.createWriteStream(path.join(logDirectoryPath, httpLogsFilename), { flags: 'a' });
 
 const attachRoutes = (): void => {
    app.use('/toDoList', toDoRoute);
